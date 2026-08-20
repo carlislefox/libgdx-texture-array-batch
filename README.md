@@ -1,6 +1,14 @@
 # TextureArraySpriteBatch
 An OpenGL 2.0 Batch implementation for LibGDX that leverages Texture Arrays for performant draw calls spanning multiple textures.
 
+## Gradle
+
+```groovy
+dependencies {
+    implementation 'com.github.carlislefox:libgdx-texture-array-batch:1.0'
+}
+```
+
 ## Usage
 
 ```kotlin
@@ -13,10 +21,8 @@ fun update(delta: Float) {
 }
 ```
 
-# BindlessStage
-A Scene2d.ui Stage implementation that does not force a Batch to begin() or end(), thus not implicitly triggering any binds. It is designed for use with a TextureArraySpriteBatch that might already have textures in its cache from prior draw calls this frame.
-
-## Usage
+## BindlessStage
+A Scene2d.ui Stage implementation that does not force a `Batch` to `begin()` or `end()`, thus not implicitly triggering any binds. It is designed for use with a `TextureArraySpriteBatch` that might already have textures in its cache from prior draw calls this frame.
 
 ```kotlin
 val batch = TextureArraySpriteBatch()
