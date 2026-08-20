@@ -1,5 +1,5 @@
 # TextureArraySpriteBatch
-An OpenGL 2.0 Batch implementation for LibGDX that leverages Texture Arrays for performant draw calls spanning multiple textures.
+An OpenGL 2.0 Batch implementation for LibGDX that leverages Texture Arrays for performant draw calls spanning multiple textures. This is a drop-in replacement for `SpriteBatch`, and has been tested to maturity on Android, Nvidia, and AMD hardware.
 
 ## Gradle
 
@@ -40,3 +40,10 @@ fun update(delta: Float) {
    batch.end()
 }
 ```
+
+## Special Thanks
+I cannot stress enough how much I have benefitted from code, time, and patience shared by numerous LibGDX community members to get to this point.  A massive special thank you to:
+
+- VaTTeRGeR _(base implementation)_
+- fgnm _(fragment shader workarounds for AMD compatability)_
+- tommyettinger _(the man, the myth, the legend)_
