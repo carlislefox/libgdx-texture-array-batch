@@ -20,7 +20,7 @@ A Scene2d.ui Stage implementation that does not force a Batch to begin() or end(
 
 ```kotlin
 val batch = TextureArraySpriteBatch()
-val stage = BindlessStage(ScreenViewport(),textureArraySpriteBatch)
+val stage = BindlessStage(ScreenViewport(), textureArraySpriteBatch)
 
 fun update(delta: Float) { 
    batch.begin() 
