@@ -5,9 +5,12 @@ An OpenGL 2.0 Batch implementation for LibGDX that leverages Texture Arrays for 
 
 ```kotlin
 val batch = TextureArraySpriteBatch()
-batch.begin()
-// <-- Draw everything in frame
-batch.end()
+
+fun update(delta: Float) {
+   batch.begin()
+   // <-- Draw everything in frame
+   batch.end()
+}
 ```
 
 # BindlessStage
@@ -19,10 +22,12 @@ A Scene2d.ui Stage implementation that does not force a Batch to begin() or end(
 val batch = TextureArraySpriteBatch()
 val stage = BindlessStage(ScreenViewport(),textureArraySpriteBatch)
 
-batch.begin()
-// <-- Draw lots of cool stuff under the stage
-stage.act()
-stage.draw()
-// <-- Draw lots of cool stuff over the stage
-batch.end()
+fun update(delta: Float) { 
+   batch.begin() 
+   // <-- Draw lots of cool stuff under the stage
+   stage.act()
+   stage.draw() 
+   // <-- Draw lots of cool stuff over the stage
+   batch.end()
+}
 ```
