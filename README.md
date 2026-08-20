@@ -60,8 +60,8 @@ A Scene2d.ui Stage implementation that does not force a `Batch` to `begin()` or 
 
 ### Kotlin
 ```kotlin
-val batch = TextureArraySpriteBatch()
-val stage = BindlessStage(ScreenViewport(), textureArraySpriteBatch)
+val batch: Batch = TextureArraySpriteBatch()
+val stage: Stage = BindlessStage(ScreenViewport(), textureArraySpriteBatch)
 
 fun update(delta: Float) {
    Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT) // Clear the frame buffer
@@ -79,8 +79,8 @@ fun update(delta: Float) {
 ```
 ### Java
 ```java
-final TextureArraySpriteBatch batch = new TextureArraySpriteBatch();
-final BindlessStage stage = new BindlessStage(new ScreenViewport(), batch);
+final Batch batch = new TextureArraySpriteBatch();
+final Stage stage = new BindlessStage(new ScreenViewport(), batch);
 
 public void update(float delta) {
    Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT); // Clear the frame buffer
