@@ -2,7 +2,6 @@ package com.badlogic.gdx.scenes.scene2d;
 
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.TextureArraySpriteBatch;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 /**
@@ -17,7 +16,7 @@ public class BindlessStage extends Stage {
     /** Creates a stage with the specified viewport and batch. This can be used to specify an existing batch or to customize which
      * batch implementation is used.
      * @param batch Will not be disposed if {@link #dispose()} is called, handle disposal yourself. */
-    public BindlessStage(Viewport viewport, TextureArraySpriteBatch batch) {
+    public BindlessStage(Viewport viewport, Batch batch) {
         super(viewport, batch);
         getRoot().setTransform(false);
     }
