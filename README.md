@@ -25,8 +25,11 @@ val stage = BindlessStage(ScreenViewport(),textureArraySpriteBatch)
 fun update(delta: Float) { 
    batch.begin() 
    // <-- Draw lots of cool stuff under the stage
-   stage.act()
-   stage.draw() 
+   stage.apply {
+       viewport.apply()
+       act(delta)
+       draw()
+   }
    // <-- Draw lots of cool stuff over the stage
    batch.end()
 }
