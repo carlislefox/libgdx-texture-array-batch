@@ -10,7 +10,9 @@ dependencies {
 ```
 
 ## Usage
+Texture Array Sprite Batches are created and used exactly like a vanilla SpriteBatch.
 
+### Kotlin
 ```kotlin
 val batch = TextureArraySpriteBatch()
 
@@ -20,15 +22,50 @@ fun update(delta: Float) {
    batch.end()
 }
 ```
+### Java
+```java
+final TextureArraySpriteBatch batch = new TextureArraySpriteBatch();
+
+public void update(float delta) {
+   batch.begin();
+   // <-- Draw everything in frame
+   batch.end();
+}
+```
+
+## Legacy Device Support
+It is good practice to fall back to a vanilla implementation on instantiation, ensuring older devices that do not support Texture Arrays still work, albeit at a performance defecit.
+
+### Kotlin
+```kotlin
+val batch = try {
+   TextureArraySpriteBatch()
+} catch (e: Exception) {
+   SpriteBatch()
+}
+```
+### Java
+```java
+Batch batch;
+
+try {
+   batch = new TextureArraySpriteBatch();
+} catch (Exception e) {
+   batch = new SpriteBatch();
+}
+```
 
 ## BindlessStage
-A Scene2d.ui Stage implementation that does not force a `Batch` to `begin()` or `end()`, thus not implicitly triggering any binds. It is designed for use with a `TextureArraySpriteBatch` that might already have textures in its cache from prior draw calls this frame.
+A Scene2d.ui Stage implementation that does not force a `Batch` to `begin()` or `end()`, thus not implicitly triggering any binds. It is designed for use with a `TextureArraySpriteBatch` that might already have textures in its cache from prior draw calls this frame, or may be performing subsequent draws that leverage textures already used during the rendering of the scene.
 
+### Kotlin
 ```kotlin
 val batch = TextureArraySpriteBatch()
 val stage = BindlessStage(ScreenViewport(), textureArraySpriteBatch)
 
-fun update(delta: Float) { 
+fun update(delta: Float) {
+   Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT) // Clear the frame buffer
+    
    batch.begin() 
    // <-- Draw lots of cool stuff under the stage
    stage.apply {
@@ -38,6 +75,23 @@ fun update(delta: Float) {
    }
    // <-- Draw lots of cool stuff over the stage
    batch.end()
+}
+```
+### Java
+```java
+final TextureArraySpriteBatch batch = new TextureArraySpriteBatch();
+final BindlessStage stage = new BindlessStage(new ScreenViewport(), batch);
+
+public void update(float delta) {
+   Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT); // Clear the frame buffer
+   
+   batch.begin();
+   // <-- Draw lots of cool stuff under the stage
+   stage.getViewport().apply();
+   stage.act(delta);
+   stage.draw();
+   // <-- Draw lots of cool stuff over the stage
+   batch.end();
 }
 ```
 
