@@ -35,15 +35,22 @@ import java.util.Arrays;
  * @author fgnm (Fragment Shader) */
 public class TextureArraySpriteBatch implements Batch {
 
+    // Constants
+
+    private static final int SPRITE_VERTEX_SIZE = 5;
+
+    private static final int SPRITE_FLOAT_SIZE = SPRITE_VERTEX_SIZE * 4;
+
+    /** Precalculated as is required to determine the flush threshold every draw call */
+    private final int SPRITE_ATTRIBUTE_LENGTH = SPRITE_FLOAT_SIZE + SPRITE_FLOAT_SIZE / SPRITE_VERTEX_SIZE;
+
+    // State
+
     private int idx = 0;
 
     private final Mesh mesh;
 
     private final float[] vertices;
-
-    private final int spriteVertexSize = 5;
-
-    private final int spriteFloatSize = spriteVertexSize * 4;
 
     /** The maximum number of available texture units for the fragment shader */
     private static int maxTextureUnits = -1;
@@ -174,7 +181,7 @@ public class TextureArraySpriteBatch implements Batch {
 
         projectionMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-        vertices = new float[size * (spriteFloatSize + 4)];
+        vertices = new float[size * (SPRITE_FLOAT_SIZE + 4)];
 
         int len = size * 6;
         short[] indices = new short[len];
@@ -295,6 +302,7 @@ public class TextureArraySpriteBatch implements Batch {
         }
 
         setupMatrices();
+        applyBlendState();
 
         drawing = true;
     }
@@ -695,27 +703,25 @@ public class TextureArraySpriteBatch implements Batch {
         if (!drawing) {
             throw new IllegalStateException("TextureArraySpriteBatch.begin must be called before draw.");
         }
-
-        flushIfFull();
+        if (count % SPRITE_FLOAT_SIZE != 0) {
+            throw new IllegalArgumentException("count must be a multiple of " + SPRITE_FLOAT_SIZE);
+        }
 
         // Assigns a texture unit to this texture, flushing if none is available
         final float ti = activateTextureCached(texture);
+        final int end = offset + count;
 
-        // spriteVertexSize is the number of floats an unmodified input vertex consists of,
-        // therefore this loop iterates over the vertices stored in parameter spriteVertices.
-        for (int srcPos = 0; srcPos < count; srcPos += spriteVertexSize) {
-            // Copy the vertices
-            System.arraycopy(spriteVertices, srcPos, vertices, idx, spriteVertexSize);
+        // Process complete sprites so capacity is checked once per sprite rather than once per vertex.
+        for (int srcPos = offset; srcPos < end;) {
+            flushIfFull();
 
-            // Advance idx by vertex float count
-            idx += spriteVertexSize;
-
-            // Inject texture unit index and advance idx
-            vertices[idx++] = ti;
-
-            // If we are going to overflow, flush
-            if (idx + spriteVertexSize > vertices.length) {
-                flush();
+            for (int vertex = 0; vertex < 4; vertex++) {
+                vertices[idx++] = spriteVertices[srcPos++];
+                vertices[idx++] = spriteVertices[srcPos++];
+                vertices[idx++] = spriteVertices[srcPos++];
+                vertices[idx++] = spriteVertices[srcPos++];
+                vertices[idx++] = spriteVertices[srcPos++];
+                vertices[idx++] = ti;
             }
         }
     }
@@ -1088,7 +1094,7 @@ public class TextureArraySpriteBatch implements Batch {
     /** Flushes if the vertices array cannot hold an additional sprite ((spriteVertexSize + 1) * 4 vertices) anymore. */
     private void flushIfFull() {
         // original Sprite attribute size plus one extra float per sprite vertex
-        if (vertices.length - idx < spriteFloatSize + spriteFloatSize / spriteVertexSize) {
+        if (vertices.length - idx < SPRITE_ATTRIBUTE_LENGTH) {
             flush();
         }
     }
@@ -1100,7 +1106,7 @@ public class TextureArraySpriteBatch implements Batch {
         renderCalls++;
         totalRenderCalls++;
 
-        int spritesInBatch = idx / (spriteFloatSize + 4);
+        int spritesInBatch = idx / (SPRITE_FLOAT_SIZE + 4);
         if (spritesInBatch > maxSpritesInBatch) maxSpritesInBatch = spritesInBatch;
         int count = spritesInBatch * 6;
 
@@ -1109,13 +1115,6 @@ public class TextureArraySpriteBatch implements Batch {
 
         Mesh mesh = this.mesh;
         mesh.setVertices(vertices, 0, idx);
-
-        if (blendingDisabled) {
-            Gdx.gl.glDisable(GL20.GL_BLEND);
-        } else {
-            Gdx.gl.glEnable(GL20.GL_BLEND);
-            if (blendSrcFunc != -1) Gdx.gl.glBlendFuncSeparate(blendSrcFunc, blendDstFunc, blendSrcFuncAlpha, blendDstFuncAlpha);
-        }
 
         if (customShader != null) {
             mesh.render(customShader, GL20.GL_TRIANGLES, 0, count);
@@ -1157,8 +1156,6 @@ public class TextureArraySpriteBatch implements Batch {
             // getTextureObjectHandle() just returns an int,
             // it's fine to call this method instead of caching the value.
             if (textureHandle == usedTextures[i].getTextureObjectHandle()) {
-                // Increase the access counter.
-                usedTexturesLFU[i]++;
                 return i;
             }
         }
@@ -1169,10 +1166,6 @@ public class TextureArraySpriteBatch implements Batch {
             // Put the texture into the next free slot
             usedTextures[currentTextureLFUSize] = texture;
             texture.bind(currentTextureLFUSize);
-
-            // Increase the access counter.
-            usedTexturesLFU[currentTextureLFUSize]++;
-
             return currentTextureLFUSize++;
         }
 
@@ -1240,6 +1233,7 @@ public class TextureArraySpriteBatch implements Batch {
         if (blendingDisabled) return;
         flush();
         blendingDisabled = true;
+        if (drawing) applyBlendState();
     }
 
     @Override
@@ -1247,6 +1241,7 @@ public class TextureArraySpriteBatch implements Batch {
         if (!blendingDisabled) return;
         flush();
         blendingDisabled = false;
+        if (drawing) applyBlendState();
     }
 
     @Override
@@ -1266,6 +1261,20 @@ public class TextureArraySpriteBatch implements Batch {
         blendDstFunc = dstFuncColor;
         blendSrcFuncAlpha = srcFuncAlpha;
         blendDstFuncAlpha = dstFuncAlpha;
+
+        if (drawing) applyBlendState();
+    }
+
+    /** Applies blending state when beginning a batch or after that state changes. */
+    private void applyBlendState() {
+        if (blendingDisabled) {
+            Gdx.gl.glDisable(GL20.GL_BLEND);
+        } else {
+            Gdx.gl.glEnable(GL20.GL_BLEND);
+            if (blendSrcFunc != -1) {
+                Gdx.gl.glBlendFuncSeparate(blendSrcFunc, blendDstFunc, blendSrcFuncAlpha, blendDstFuncAlpha);
+            }
+        }
     }
 
     @Override
