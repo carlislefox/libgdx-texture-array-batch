@@ -6,8 +6,10 @@ An OpenGL 2.0 Batch implementation for LibGDX that leverages Texture Arrays for 
 ```groovy
 dependencies {
     implementation 'com.github.carlislefox:libgdx-texture-array-batch:v1.2'
-    // implementation 'com.github.carlislefox:libgdx-texture-array-batch:v1.2:sources'
-    // implementation 'com.github.carlislefox:libgdx-texture-array-batch:v1.2:javadoc'
+    
+    // If you are using GWT
+    implementation 'com.github.carlislefox:libgdx-texture-array-batch:v1.2:sources'
+    implementation 'com.github.carlislefox:libgdx-texture-array-batch:v1.2:javadoc'
 }
 ```
 
